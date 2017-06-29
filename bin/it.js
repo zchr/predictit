@@ -24,12 +24,11 @@ getAll.then((markets) => {
         bestSellNoCost: c.BestSellNoCost
       }
       setTimeout(() => {
-        axios.put(`https://predictit-history.firebaseio.com/${market.ID}/${c.ID}.json`, attr,
-          { params: { auth: process.env.firebase } }).then(() => {
-          axios.post(`https://predictit-history.firebaseio.com/${market.ID}/${c.ID}/prices.json`, price,
-          { params: { auth: process.env.firebase } });
-        });
-      }, Math.random()*40000);
+        axios.put(`https://predictit-history.firebaseio.com/${market.ID}/${c.ID}/attributes.json`, attr,
+          { params: { auth: 'QLFxLVukRuEsxWyk1lOINdV0CNQXQ9du4JExPt5f' } });
+        axios.post(`https://predictit-history.firebaseio.com/${market.ID}/${c.ID}/prices.json`, price,
+        { params: { auth: 'QLFxLVukRuEsxWyk1lOINdV0CNQXQ9du4JExPt5f' } });
+      }, Math.random()*20000);
 
     });
   });
