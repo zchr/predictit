@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "axios": "^0.16.2",
-    "express": "^4.13.3"
+    "express": "^4.13.3",
+    "predict-it": "^1.0.2"
   },
   "engines": {
     "node": "4.0.0"
