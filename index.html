@@ -6,14 +6,18 @@
   <style>
     #graphs .market {
       display: flex;
-      justify-content: center;
       flex-wrap: wrap;
       border-bottom: 1px solid #ccc;
       margin: 45px 0;
       padding-bottom: 45px;
     }
+
+    h1 {
+      width: 100%;
+    }
+
     canvas {
-      width: 400px !important;
+      width: 30% !important;
       height: 200px !important;
       margin-left: 15px;
       margin-right: 15px;
@@ -27,139 +31,75 @@
 </body>
 <script>
   let theData = false;
-  const isUpdated = () => {
-    const indexedDB = window.indexedDB;
-    const open = indexedDB.open('Orchestra', 1);
-
-    open.onupgradeneeded = function() {
-      const db = open.result;
-      const store = db.createObjectStore('OrchestraStore', {keyPath: 'res'});
-    };
-
-    // if the date falls before the last hour:50
-    // then call the api
-    const updated = new Date(localStorage.getItem('updateDate'));
-    let lastUpdate = new Date();
-    if (lastUpdate.getMinutes() < 52) {
-        lastUpdate.setHours(lastUpdate.getHours() - 1);
-    }
-    lastUpdate.setMinutes(50);
-
-    // grab the updated data once
-    if (lastUpdate > updated) {
-      // update the date
-      localStorage.setItem('updateDate', (new Date()).toString());
-      localStorage.removeItem('data');
-      axios.get('/data').then((d) => {
-        open.onsuccess = function() {
-          // Start a new transaction
-          const db = open.result;
-          const tx = db.transaction("OrchestraStore", "readwrite");
-          const store = tx.objectStore("OrchestraStore");
-
-          // Add some data
-          store.put({res: 'data', data: d.data});
-
-          // Close the db when the transaction is done
-          tx.oncomplete = function() {
-            db.close();
-          };
-        }
-      });
-      return false;
-    }
-
-    // grab the updated data from storage
-    open.onsuccess = function() {
-      const db = open.result;
-      const tx = db.transaction("OrchestraStore", "readwrite");
-      const store = tx.objectStore("OrchestraStore");
-
-      // Query the data
-      const getData = store.get('data');
-
-      getData.onsuccess = function() {
-        localStorage.setItem('data', 'true');
-        theData = getData.result.data;
-      };
-
-      // Close the db when the transaction is done
-      tx.oncomplete = function() {
-        db.close();
-      };
-    }
-
-    return theData;
-  }
 
   const makeGraphs = () => {
     let count = 0;
     Object.keys(theData).forEach((m) => {
-      const newMarket = document.createElement('div');
-      newMarket.className = 'market';
-      document.getElementById('graphs')
-        .appendChild(newMarket);
-      Object.keys(theData[m]).forEach((c) => {
-        newMarket.insertAdjacentHTML('beforeend', `<canvas id="${m}-${c}">`);
-        const myData = Object.values(theData[m][c].prices).map((d) => {
-          return { lastTradePrice: d.lastTradePrice, date: new Date(d.date) };
-        });
+      if (theData[m].attributes) {
+        const newMarket = document.createElement('div');
+        newMarket.className = 'market';
+        newMarket.insertAdjacentHTML('afterbegin', `<h1>${theData[m].attributes.name}</h1>`)
+        document.getElementById('graphs')
+          .appendChild(newMarket);
+        Object.keys(theData[m]).forEach((c) => {
+          if (c != 'attributes') {
+            newMarket.insertAdjacentHTML('beforeend', `<canvas id="${m}-${c}">`);
+            const myData = Object.values(theData[m][c].prices).map((d) => {
+              return { lastTradePrice: d.lastTradePrice, date: new Date(d.date) };
+            });
 
-        new Chart(document.getElementById(`${m}-${c}`),
-          { type: 'line',
-            data: {
-              labels: myData.map((d) => { return d.date; }),
-              datasets: [{
-                data: myData.map((d) => { return d.lastTradePrice; }),
-                fill: false,
-                pointStyle: 'line',
-                borderColor: 'black',
-                borderWidth: 10,
-                lineTension: 0.3
-              }]
-            },
-            options: {
-              legend: {
-                display: false
-              },
-              scales: {
-                xAxes: [{
-                    display: false
-                }],
-                yAxes: [{
-                  ticks: {
-                    suggestedMin: 0,
-                    suggestedMax: 1,
-                    fontSize: 30,
-                    stepSize : .25
+            new Chart(document.getElementById(`${m}-${c}`),
+              { type: 'line',
+                data: {
+                  labels: myData.map((d) => { return d.date; }),
+                  datasets: [{
+                    data: myData.map((d) => { return d.lastTradePrice; }),
+                    fill: false,
+                    pointStyle: 'line',
+                    borderColor: 'black',
+                    borderWidth: 10,
+                    lineTension: 0.3
+                  }]
+                },
+                options: {
+                  title: {
+                    display: (Object.keys(theData[m]).length - 2),
+                    text: theData[m][c].attributes.name,
+                    fontSize: 50
                   },
-                  gridLines: {
-                    color: 'white',
+                  legend: {
+                    display: false
+                  },
+                  scales: {
+                    xAxes: [{
+                        display: false
+                    }],
+                    yAxes: [{
+                      ticks: {
+                        suggestedMin: 0,
+                        suggestedMax: 1,
+                        fontSize: 30,
+                        stepSize : .25
+                      },
+                      gridLines: {
+                        color: 'white',
+                      }
+                    }]
                   }
-                }]
+                }
               }
-            }
+            );
           }
-        );
-      });
-    });
-  }
-
-  function getData(res, rej) {
-    return new Promise((res, rej) => {
-      if (isUpdated()) {
-        return res(true)
-      } else {
-        setTimeout(() => {
-          return res(getData(res, rej));
-        }, 1000);
+        });
       }
     });
   }
 
-  getData().then(() => {
+  axios.get('/data').then((d) => {
+    theData = d.data;
     makeGraphs();
   });
+
 
 </script>
 </html>
