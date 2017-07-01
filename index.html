@@ -1,0 +1,38 @@
+<html>
+<head>
+  <title>Orchestra</title>
+</head>
+<body>
+  <div id="content">
+    No data :(
+  </div>
+</body>
+<script>
+  const isUpdated = (d) => {
+    const r = Math.random();
+    console.log(r);
+    return r > .8;
+  }
+  const makeGraphs = () => {
+    document.getElementById('content').innerHTML = 'it happened!!';
+  }
+
+  function getData(res, rej) {
+    return new Promise((res, rej) => {
+      let d = localStorage.getItem('updateDate');
+      if (isUpdated()) {
+        return res(true)
+      } else {
+        setTimeout(() => {
+          console.log('trying');
+          return res(getData());
+        }, 1000);
+      }
+    });
+  }
+  getData().then(() => {
+    makeGraphs();
+  });
+
+</script>
+</html>
