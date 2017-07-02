@@ -38,7 +38,7 @@
   function isFlatline(prices) {
     const nums = prices.map((p) => {return p.lastTradePrice});
     console.log(Math.max(...nums)+0.000, Math.min(...nums)+0.000)
-    return (Math.max(...nums)+0.0001)/(Math.min(...nums)+0.0001) < 1.25;
+    return (Math.max(...nums)+0.0001)/(Math.min(...nums)+0.0001) < 1.1;
   }
 
   const makeGraphs = (data) => {
