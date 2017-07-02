@@ -35,12 +35,16 @@
   </div>
 </body>
 <script>
-  let theData = false;
+  function isFlatline(prices) {
+    const nums = prices.map((p) => {return p.lastTradePrice});
+    console.log(Math.max(...nums)+0.000, Math.min(...nums)+0.000)
+    return (Math.max(...nums)+0.0001)/(Math.min(...nums)+0.0001) < 1.25;
+  }
 
-  const makeGraphs = () => {
+  const makeGraphs = (data) => {
     let count = 0;
-    Object.keys(theData).forEach((m) => {
-      const myMarket = theData[m];
+    Object.keys(data).forEach((m) => {
+      const myMarket = data[m];
       if (myMarket.attributes) {
         const newMarket = document.createElement('div');
         newMarket.className = 'market';
@@ -48,7 +52,7 @@
         document.getElementById('graphs')
           .appendChild(newMarket);
         Object.keys(myMarket).forEach((c) => {
-          if (c != 'attributes') {
+          if (c != 'attributes' && !isFlatline(Object.values(myMarket[c].prices))) {
             newMarket.insertAdjacentHTML('beforeend', `<canvas id="${m}-${c}">`);
             const myData = Object.values(myMarket[c].prices).map((d) => {
               return { lastTradePrice: d.lastTradePrice, date: new Date(d.date) };
@@ -70,7 +74,7 @@
                 options: {
                   title: {
                     display: (Object.keys(myMarket).length - 2),
-                    text: theData[m][c].attributes.name,
+                    text: myMarket[c].attributes.name,
                     fontSize: 50
                   },
                   legend: {
@@ -102,8 +106,7 @@
   }
 
   axios.get('/data').then((d) => {
-    theData = d.data;
-    makeGraphs();
+    makeGraphs(d.data);
   });
 
 
